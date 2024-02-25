@@ -19,8 +19,8 @@ let hue = 0; // Initial hue value for color variation
 
 // Number of rays to cast
 let maxRayCount = 14400;
-const rayNumber = 3600;
-let rayCount = 3600; // Current number of rays being cast
+const rayNumber = 1800;
+let rayCount = 1800; // Current number of rays being cast
 
 // Variables for touch event handling
 let tapTime = 0;
@@ -116,13 +116,6 @@ for (let i = 0; i < mazeRows; i++) {
     }
   }
 }
-
-
-// Create boundaries around the canvas
-boundaries.push(new Boundaries(0, 0, canvas.width, 0, 'white'));
-boundaries.push(new Boundaries(0, 0, 0, canvas.height, 'white'));
-boundaries.push(new Boundaries(canvas.width, 0, canvas.width, canvas.height, 'white'));
-boundaries.push(new Boundaries(0, canvas.height, canvas.width, canvas.height, 'white'));
 
 // Class to create rays
 class Rays {
@@ -300,7 +293,7 @@ class lightSource {
   }
 }
 
-lights.push(new lightSource(mazeStartX + 10, mazeStartY + 10, 'rgba(255, 255, 237, 0.02)', 'rgba(255, 255, 0, 0.8)', 3200));
+lights.push(new lightSource(mazeStartX + 10, mazeStartY + 10, 'rgba(255, 255, 237, 0.03)', 'rgba(255, 255, 0, 0.8)', 3200));
 
 // Event listener to move light source with mouse
 canvas.addEventListener('mousemove', (e) => {
@@ -333,7 +326,7 @@ window.addEventListener('keydown', (e) => {
     lights = [];
     i = 0;
     hue = 0;
-    lights.push(new lightSource(400, 400, 'rgba(255, 255, 237, 0.03)', 'rgba(255, 255, 0, 0.8)'));
+    lights.push(new lightSource(mazeStartX + 10, mazeStartY + 10, 'rgba(255, 255, 237, 0.03)', 'rgba(255, 255, 0, 0.8)', 3200));
   }
   else if ((e.key === 'ArrowUp' || e.key === 'w') && rayCount < maxRayCount) {
     // Increase ray count
