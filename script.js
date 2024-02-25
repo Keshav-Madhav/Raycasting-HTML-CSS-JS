@@ -27,6 +27,17 @@ let tapTime = 0;
 let tapTimeout;
 
 let wallColor = 'black';
+  
+// Maze dimensions
+let mazeRows = 21;
+let mazeCols = 43;
+let cellWidth = canvas.width / mazeCols;
+let cellHeight = canvas.height / mazeRows;
+
+// Calculate the position of the top left corner of the maze
+let mazeStartX = cellWidth;
+let mazeStartY = cellHeight;
+
 
 // Class to create boundaries
 class Boundaries {
@@ -45,12 +56,6 @@ class Boundaries {
     ctx.stroke();
   }
 }
-  
-// Maze dimensions
-let mazeRows = 20;
-let mazeCols = 40;
-let cellWidth = canvas.width / mazeCols;
-let cellHeight = canvas.height / mazeRows;
 
 // Initialize maze with all walls
 let maze = new Array(mazeRows);
@@ -239,11 +244,52 @@ class lightSource {
     }
   }
 
-  // Method to move the light source
-  move(x, y){
-    this.pos.x = x;
-    this.pos.y = y;
+  move(x, y) {
+    let newPos = { x: x, y: y };
+  
+    // Check for collisions with all boundaries
+    for (let boundary of boundaries) {
+      if (this.checkCollision(this.pos, newPos, boundary)) {
+        return; // If a collision is detected, don't move the light source
+      }
+    }
+  
+    // If no collisions are detected, move the light source
+    this.pos = newPos;
   }
+  
+  // Method to check for a collision between the movement path and a boundary
+  checkCollision(from, to, boundary) {
+    function intersect(p1, p2, p3, p4) {
+      let dx12 = p2.x - p1.x;
+      let dy12 = p2.y - p1.y;
+      let dx34 = p4.x - p3.x;
+      let dy34 = p4.y - p3.y;
+  
+      let denominator = (dy12 * dx34 - dx12 * dy34);
+  
+      if (denominator == 0) return null; // Lines are parallel
+  
+      let t1 = ((p1.x - p3.x) * dy34 + (p3.y - p1.y) * dx34) / denominator;
+      let t2 = ((p3.x - p1.x) * dy12 + (p1.y - p3.y) * dx12) / -denominator;
+  
+      if (t1 >= 0 && t1 <= 1 && t2 >= 0 && t2 <= 1) {
+        return {
+          x: p1.x + dx12 * t1,
+          y: p1.y + dy12 * t1
+        }; // Intersection point
+      }
+  
+      return null;
+    }
+  
+    let p1 = from;
+    let p2 = to;
+    let p3 = { x: boundary.a.x, y: boundary.a.y };
+    let p4 = { x: boundary.b.x, y: boundary.b.y };
+    return intersect(p1, p2, p3, p4) !== null;
+  }
+  
 
   // Method to update the number of rays for the light source
   updateRayCount(rayCount) {
@@ -254,8 +300,7 @@ class lightSource {
   }
 }
 
-// Create initial light source
-lights.push(new lightSource(400, 400, 'rgba(255, 255, 237, 0.03)', 'rgba(255, 255, 0, 0.03)'));
+lights.push(new lightSource(mazeStartX + 10, mazeStartY + 10, 'rgba(255, 255, 237, 0.02)', 'rgba(255, 255, 0, 0.8)', 3200));
 
 // Event listener to move light source with mouse
 canvas.addEventListener('mousemove', (e) => {
