@@ -419,6 +419,8 @@ function draw() {
   for (let boundary of boundaries){
     boundary.draw();
   }
+
+  drawFPS(ctx);
   
   requestAnimationFrame(draw);
 }
