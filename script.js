@@ -18,26 +18,13 @@ let i = 0; // Index for the current light source
 let hue = 0; // Initial hue value for color variation
 
 // Number of rays to cast
-let maxRayCount = 14400;
-const rayNumber = 1800;
-let rayCount = 1800; // Current number of rays being cast
+let maxRayCount = 28800;
+const rayNumber = 3600;
+let rayCount = 3600; // Current number of rays being cast
 
 // Variables for touch event handling
 let tapTime = 0;
 let tapTimeout;
-
-let wallColor = 'black';
-  
-// Maze dimensions
-let mazeRows = 21;
-let mazeCols = 43;
-let cellWidth = canvas.width / mazeCols;
-let cellHeight = canvas.height / mazeRows;
-
-// Calculate the position of the top left corner of the maze
-let mazeStartX = cellWidth;
-let mazeStartY = cellHeight;
-
 
 // Class to create boundaries
 class Boundaries {
@@ -57,64 +44,20 @@ class Boundaries {
   }
 }
 
-// Initialize maze with all walls
-let maze = new Array(mazeRows);
-for (let i = 0; i < mazeRows; i++) {
-  maze[i] = new Array(mazeCols).fill(1);
-}
+// Place boundaries around the canvas
+boundaries.push(new Boundaries(0, 0, canvas.width, 0, 'black'));
+boundaries.push(new Boundaries(canvas.width, 0, canvas.width, canvas.height, 'black'));
+boundaries.push(new Boundaries(canvas.width, canvas.height, 0, canvas.height, 'black'));
+boundaries.push(new Boundaries(0, canvas.height, 0, 0, 'black'));
 
-// Recursive function to carve paths
-function carve(x, y) {
-  // Define the carving directions
-  let directions = [
-    [-1, 0], // Up
-    [1, 0], // Down
-    [0, -1], // Left
-    [0, 1] // Right
-  ];
-
-  // Randomize the directions
-  directions.sort(() => Math.random() - 0.5);
-
-  // Try carving in each direction
-  for (let [dx, dy] of directions) {
-    let nx = x + dx * 2;
-    let ny = y + dy * 2;
-
-    if (nx >= 0 && nx < mazeRows && ny >= 0 && ny < mazeCols && maze[nx][ny] === 1) {
-      maze[x + dx][y + dy] = 0;
-      maze[nx][ny] = 0;
-      carve(nx, ny);
-    }
-  }
-}
-
-// Start carving from the upper-left corner
-carve(1, 1);
-// Generate optimized boundaries for the maze
-for (let i = 0; i < mazeRows; i++) {
-  for (let j = 0; j < mazeCols; j++) {
-    if (maze[i][j] === 1) {
-      let x1 = j * cellWidth;
-      let y1 = i * cellHeight;
-      let x2 = (j + 1) * cellWidth;
-      let y2 = (i + 1) * cellHeight;
-
-      // Check the neighboring cells
-      if (i > 0 && maze[i - 1][j] === 0) { // Top
-        boundaries.push(new Boundaries(x1, y1, x2, y1, wallColor));
-      }
-      if (j > 0 && maze[i][j - 1] === 0) { // Left
-        boundaries.push(new Boundaries(x1, y1, x1, y2, wallColor));
-      }
-      if (j < mazeCols - 1 && maze[i][j + 1] === 0) { // Right
-        boundaries.push(new Boundaries(x2, y1, x2, y2, wallColor));
-      }
-      if (i < mazeRows - 1 && maze[i + 1][j] === 0) { // Bottom
-        boundaries.push(new Boundaries(x1, y2, x2, y2, wallColor));
-      }
-    }
-  }
+// Randomly create 5 walls
+for (let i = 0; i < 5; i++) {
+  const x1 = Math.random() * canvas.width;
+  const y1 = Math.random() * canvas.height;
+  const x2 = Math.random() * canvas.width;
+  const y2 = Math.random() * canvas.height;
+  const color = 'white';
+  boundaries.push(new Boundaries(x1, y1, x2, y2, color));
 }
 
 // Class to create rays
@@ -239,50 +182,8 @@ class lightSource {
 
   move(x, y) {
     let newPos = { x: x, y: y };
-  
-    // Check for collisions with all boundaries
-    for (let boundary of boundaries) {
-      if (this.checkCollision(this.pos, newPos, boundary)) {
-        return; // If a collision is detected, don't move the light source
-      }
-    }
-  
-    // If no collisions are detected, move the light source
     this.pos = newPos;
   }
-  
-  // Method to check for a collision between the movement path and a boundary
-  checkCollision(from, to, boundary) {
-    function intersect(p1, p2, p3, p4) {
-      let dx12 = p2.x - p1.x;
-      let dy12 = p2.y - p1.y;
-      let dx34 = p4.x - p3.x;
-      let dy34 = p4.y - p3.y;
-  
-      let denominator = (dy12 * dx34 - dx12 * dy34);
-  
-      if (denominator == 0) return null; // Lines are parallel
-  
-      let t1 = ((p1.x - p3.x) * dy34 + (p3.y - p1.y) * dx34) / denominator;
-      let t2 = ((p3.x - p1.x) * dy12 + (p1.y - p3.y) * dx12) / -denominator;
-  
-      if (t1 >= 0 && t1 <= 1 && t2 >= 0 && t2 <= 1) {
-        return {
-          x: p1.x + dx12 * t1,
-          y: p1.y + dy12 * t1
-        }; // Intersection point
-      }
-  
-      return null;
-    }
-  
-    let p1 = from;
-    let p2 = to;
-    let p3 = { x: boundary.a.x, y: boundary.a.y };
-    let p4 = { x: boundary.b.x, y: boundary.b.y };
-    return intersect(p1, p2, p3, p4) !== null;
-  }
-  
 
   // Method to update the number of rays for the light source
   updateRayCount(rayCount) {
@@ -293,7 +194,7 @@ class lightSource {
   }
 }
 
-lights.push(new lightSource(mazeStartX + 10, mazeStartY + 10, 'rgba(255, 255, 237, 0.03)', 'rgba(255, 255, 0, 0.8)', 3200));
+lights.push(new lightSource( canvas.width/2, canvas.height/2, 'rgba(255, 255, 237, 0.03)', 'rgba(255, 255, 0, 0.8)'));
 
 // Event listener to move light source with mouse
 canvas.addEventListener('mousemove', (e) => {
@@ -303,7 +204,7 @@ canvas.addEventListener('mousemove', (e) => {
 // Event listener to add new light source or change ray count with mouse click
 canvas.addEventListener('click', (e) => {
   // Decrease ray count of old light source
-  lights[i].updateRayCount(640);
+  lights[i].updateRayCount(rayCount);
 
   // Increase index
   i++;
@@ -313,7 +214,7 @@ canvas.addEventListener('click', (e) => {
   const lightColor = `hsla(${hue}, 100%, 50%, 0.03)`;
 
   // Add new light source with increased ray count
-  lights.push(new lightSource(e.clientX, e.clientY, lightColor, rayColor, 3200));
+  lights.push(new lightSource(e.clientX, e.clientY, lightColor, rayColor));
 
   // Make sure the new light source is the active one
   i = lights.length - 1;
@@ -326,7 +227,7 @@ window.addEventListener('keydown', (e) => {
     lights = [];
     i = 0;
     hue = 0;
-    lights.push(new lightSource(mazeStartX + 10, mazeStartY + 10, 'rgba(255, 255, 237, 0.03)', 'rgba(255, 255, 0, 0.8)', 3200));
+    lights.push(new lightSource(canvas.width/2, canvas.height/2, 'rgba(255, 255, 237, 0.03)', 'rgba(255, 255, 0, 0.8)'));
   }
   else if ((e.key === 'ArrowUp' || e.key === 'w') && rayCount < maxRayCount) {
     // Increase ray count
@@ -340,26 +241,6 @@ window.addEventListener('keydown', (e) => {
     rayCount -= 100;
     for (let light of lights) {
       light.updateRayCount(rayCount);
-    }
-  }
-  if (e.key === 'ArrowLeft' || e.key === 'a') {
-    if (lights.length > 1) {
-      lights[i].updateRayCount(640); // Decrease ray count of old light source
-      i = (i === 0) ? lights.length - 1 : i - 1;
-      lights[i].updateRayCount(3200); // Increase ray count of new light source
-    }
-  }
-  else if (e.key === 'ArrowRight' || e.key === 'd') {
-    if (lights.length > 1) {
-      lights[i].updateRayCount(640); // Decrease ray count of old light source
-      i = (i === lights.length - 1) ? 0 : i + 1;
-      lights[i].updateRayCount(3200); // Increase ray count of new light source
-    }
-  }
-  else if (e.key === 't') {
-    wallColor = (wallColor === 'black') ? 'white' : 'black';
-    for (let boundary of boundaries) {
-      boundary.color = wallColor;
     }
   }
 });
